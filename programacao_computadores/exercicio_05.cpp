@@ -37,5 +37,6 @@ main(){
 
         printf("\nDeseja continuar (S/N)?:");
         resp = toupper(getche());
+        
     }
 }
