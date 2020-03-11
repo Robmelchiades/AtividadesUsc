@@ -1,2 +1,4 @@
 programacao_computadores/debug/*
 .vscode*
+*.Rmd
+*.nb.html
