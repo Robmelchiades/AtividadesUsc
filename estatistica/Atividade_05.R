@@ -2,6 +2,8 @@
 
 library(formattable)
 library(ggplot2)
+library(ggrepel)
+
 
 
 #====================================== Funções
@@ -191,12 +193,21 @@ colnames(df.metricas) <- c("Métricas", "Valores")
 
 rm(nomes, valores)
 #====================================== Calculos Separatrizes
-
-Q <- calcSeparatriz(4)
+  
+K <- calcSeparatriz(4)
 D <- calcSeparatriz(10)
 P <- calcSeparatriz(100)
 
+vetK <- c(K)
+vetD <- c(D[c(1,3,5,7,9)])
+vetP <- P[c(10,25,50,75,90)]
+vetValores <- c(vetK, vetD, vetP)
 
+vetnomes <- c("K1","K2","K3","D1","D3","D5","D7","D9","P10","P25","P50","P75","P90")
+
+df.separatrizes <- data.frame(vetnomes, vetValores)
+
+rm(vetK, vetD, vetP, vetValores, vetnomes, K, D, P)
 #====================================== Criação do Histograma
 hist <- ggplot(data=df, aes(x=variavel, y=fi))
 hist <- hist + geom_col(color='black', fill = 'blue') +   
@@ -206,19 +217,20 @@ hist <- hist +
   xlab(nomes.colunas[1]) + 
   ylab(nomes.colunas[2]) +
   ggtitle("Histograma") +
-  theme(axis.title.x = element_text(color="Black", size=30),
-        axis.title.y = element_text(color="Black", size=30),
-        axis.text.x = element_text(size=20),
-        axis.text.y = element_text(size=20),
+  theme(axis.title.x = element_text(color="Black", size=15),
+        axis.title.y = element_text(color="Black", size=15),
+        axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10),
         
-        legend.title = element_text(size=30),
-        legend.text = element_text(size=20),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=10),
         legend.position = c(1,1),
         legend.justification = c(1,1),
         
         plot.title = element_text(color="Black",
-                                  size=40,
+                                  size=20,
                                   family="Courier"))
+
 
 #====================================== Criação do polígono frequeência simples x ponto médio
 fi.extendido <- df$fi
@@ -246,21 +258,67 @@ poli.freq.simples <- poli.freq.simples +
   xlab(nomes.colunas[1]) + 
   ylab(nomes.colunas[2]) +
   ggtitle("Frequência x Ponto central") +
-  theme(axis.title.x = element_text(color="Black", size=30),
-        axis.title.y = element_text(color="Black", size=30),
-        axis.text.x = element_text(size=20),
-        axis.text.y = element_text(size=20),
+  theme(axis.title.x = element_text(color="Black", size=15),
+        axis.title.y = element_text(color="Black", size=15),
+        axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10),
         
-        legend.title = element_text(size=30),
-        legend.text = element_text(size=20),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=10),
         legend.position = c(1,1),
         legend.justification = c(1,1),
         
         plot.title = element_text(color="Black",
-                                  size=40,
+                                  size=20,
                                   family="Courier"))
 rm(fi.extendido, xi.extendido, fri.percent.extendido, df.extendido)
-#====================================== Criação polígono frequência acumulada
+#====================================== Criação polígono frequência acumulada Métricas
+
+df
+Fri.percent <- append(df$Fri.percent, 0,0)
+Fi <- append(df$Fi, 0,0)
+
+df.poli.freq.acumulada <- data.frame(variaveis.valores, Fri.percent, Fi)
+
+poli.freq.acumulada <- ggplot()
+poli.freq.acumulada <- poli.freq.acumulada + geom_line(data = df.poli.freq.acumulada, aes(x = variaveis.valores, y= Fi, group = 1)) + 
+  geom_text(stat = 'identity', aes(label = percent((Fri.percent/100),digits = 0),y = Fi + 0.5, x = variaveis.valores + 0.1, vjust = -0.2))
+
+poli.freq.acumulada <- poli.freq.acumulada +  
+  xlab(nomes.colunas[1]) + 
+  ylab(nomes.colunas[2]) +
+  ggtitle("Frequência Acumulada") +
+  theme(axis.title.x = element_text(color="Black", size=15),
+        axis.title.y = element_text(color="Black", size=15),
+        axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10),
+        
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=10),
+        legend.position = c(1,1),
+        legend.justification = c(1,1),
+        
+        plot.title = element_text(color="Black",
+                                  size=20,
+                                  family="Courier"))
+
+valores.y <- descobreFuncao(df.metricas$Valores, variaveis.valores, Fi)
+poli.freq.acumulada <- poli.freq.acumulada + 
+  geom_point(aes(x=df.metricas$Valores, y=valores.y,color=df.metricas$Métricas)) + 
+  geom_label_repel(aes(x=df.metricas$Valores, y=valores.y,label = df.metricas$Métricas),
+                   nudge_x = 1,
+                   nudge_y = 32,
+                   box.padding   = 0.8, 
+                   point.padding = 1,
+                   segment.color = 'grey50') +
+  theme_classic()
+
+poli.freq.acumulada
+rm(Fri.percent, Fi, df.poli.freq.acumulada, valores.y)
+
+
+
+#====================================== Criação polígono frequência acumulada Separatrizes
 
 
 Fri.percent <- append(df$Fri.percent, 0,0)
@@ -270,32 +328,42 @@ df.poli.freq.acumulada <- data.frame(variaveis.valores, Fri.percent, Fi)
 
 poli.freq.acumulada <- ggplot()
 poli.freq.acumulada <- poli.freq.acumulada + geom_line(data = df.poli.freq.acumulada, aes(x = variaveis.valores, y= Fi, group = 1)) + 
-  geom_text(stat = 'identity', aes(label = Fri.percent,y = Fi + 0.5, x = variaveis.valores + 0.1, vjust = -0.2))
+  geom_text(stat = 'identity', aes(label = percent((Fri.percent/100),digits = 0),y = Fi + 0.5, x = variaveis.valores + 0.1, vjust = -0.2))
 
 poli.freq.acumulada <- poli.freq.acumulada +  
   xlab(nomes.colunas[1]) + 
   ylab(nomes.colunas[2]) +
-  ggtitle("Frequência  x Ponto central") +
-  theme(axis.title.x = element_text(color="Black", size=30),
-        axis.title.y = element_text(color="Black", size=30),
-        axis.text.x = element_text(size=20),
-        axis.text.y = element_text(size=20),
+  ggtitle("Frequência Acumulada") +
+  theme(axis.title.x = element_text(color="Black", size=15),
+        axis.title.y = element_text(color="Black", size=15),
+        axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10),
         
-        legend.title = element_text(size=30),
-        legend.text = element_text(size=20),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=10),
         legend.position = c(1,1),
         legend.justification = c(1,1),
         
         plot.title = element_text(color="Black",
-                                  size=40,
+                                  size=20,
                                   family="Courier"))
 
-valores.y <- descobreFuncao(df.metricas$Valores, variaveis.valores, Fi)
-poli.freq.acumulada <- poli.freq.acumulada + geom_point(aes(x=df.metricas$Valores, y=valores.y,
-                                                            color=df.metricas$Métricas))
+valores.y <- descobreFuncao(df.separatrizes$vetValores, variaveis.valores, Fi)
+poli.freq.acumulada <- poli.freq.acumulada + 
+  geom_point(aes(x=df.separatrizes$vetValores, y=valores.y,color=df.separatrizes$vetnomes)) + 
+  geom_label_repel(aes(x=df.separatrizes$vetValores, y=valores.y,label = df.separatrizes$vetnomes),
+                   nudge_x = 1,
+                   nudge_y = 35,
+                   box.padding   = 0.8, 
+                   point.padding = 1,
+                   segment.color = 'grey50') +
+  theme_classic()
 
 poli.freq.acumulada
 rm(Fri.percent, Fi, df.poli.freq.acumulada, valores.y)
+
+
+
 
 #====================================== Criação Gráfico Circular
 
